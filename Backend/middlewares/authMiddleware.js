@@ -1,27 +1,44 @@
 const jwt = require('jsonwebtoken')
 
 const verifyToken = (req, res, next) => {
+    const authHeader = req.headers.authorization || req.headers.Authorization
+
+    // No token → allow request to continue
+    if (!authHeader) {
+        return next()
+    }
+
+    // Authorization header exists, but isn't a Bearer token
+    if (!authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+            message: 'Invalid authorization header'
+        })
+    }
+
+    const token = authHeader.split(' ')[1]
+
+    if (!token) {
+        return res.status(401).json({
+            message: 'Invalid token'
+        })
+    }
+
     try {
-        const authHeader = req.headers.Authorization || req.headers.authorization
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET_TOKEN
+        )
 
-        if (authHeader && authHeader.startsWith("Bearer")) {
-            const token = authHeader.split(" ")[1]
+        req.user = decoded
 
-            if (token) {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN)
-                req.user = decoded
-                console.log(req.user)
-                next()
-            } else {
-                return res.status(401).json({ message: "Invalid Token" })
-            }
-        } else {
-            return res.status(401).json({ message: "Invalid Token" })
-        }
+        return next()
 
     } catch (err) {
-        console.error('Unexpected error in token verification middleware:', err.message)
-        return res.status(500).json({ message: 'Internal server error.' })
+        console.error('Token verification failed:', err.message)
+
+        return res.status(401).json({
+            message: 'Invalid or expired token'
+        })
     }
 }
 
