@@ -19,6 +19,8 @@ app.get('/', (req, res)=>{
     res.json({message : "Welcome To CipherShare!"})
 })
 
+app.use('/auth', authRoutes)
+
 const port = process.env.PORT || 3001
 
 app.listen(port, ()=>{
