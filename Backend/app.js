@@ -20,9 +20,10 @@ app.get('/', (req, res)=>{
 })
 
 app.use('/auth', authRoutes)
+app.use('/secure', secureRoutes)
 
 const port = process.env.PORT || 3001
 
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`Server listening at ${port}`)
 })
