@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const User = require('../models/userModel')
 const jwt = require('jsonwebtoken')
+const userModel = require('../models/userModel')
 
 const userRegister = async (req, res) => {
 
@@ -87,6 +88,48 @@ const userLogin = async (req, res) =>{
     }
 }
 
+const getMe = async (req , res) => {
+    if(req.user){
+        const user = req.user
+        return res.status(200).json({
+            message : `Hello, ${user.username}`
+        })
+    }
+
+    return res.status(200).json({
+        message : 'Hello, Guest!'
+    })
+}
+
+const resetPassword = async(req, res) => {
+    const { username, password, newPassword } = req.body
+
+    const user = await userModel.findOne({ username })
+
+    if(!user){
+        return res.status(400).json({
+            message : "User not registered with this username!"
+        })
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password)
+
+    if(!isMatch){
+        return res.status(401).json({
+            message :"Invalid username or password!"
+        })
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    user.password = hashedPassword
+    await user.save()
+
+    return res.status(200).json({
+        message : "Password changed successfully! Login to continue."
+    })
+}
+
 const userLogout = async(req, res) => {
     const token = req.cookies.token
 
@@ -97,4 +140,6 @@ const userLogout = async(req, res) => {
     })
 }
 
-module.exports = { userRegister, userLogin, userLogout}
+
+
+module.exports = { userRegister, userLogin, getMe, resetPassword, userLogout}
