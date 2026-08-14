@@ -7,7 +7,7 @@ const dbConnection = async () => {
             throw new Error('CONNECTION_STRING environment variable not set.')
         }
 
-        const uri = `${process.env.CONNECTION_STRING}/${commonConfigs.applicationName}`
+        const uri = `${process.env.CONNECTION_STRING}`
 
         const connect = await mongoose.connect(uri)
 
