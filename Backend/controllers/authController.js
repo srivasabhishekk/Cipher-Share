@@ -32,10 +32,15 @@ const userRegister = async (req, res) => {
 
         const token = jwt.sign({id : user._id, username : user.username}, process.env.JWT_SECRET_TOKEN, {expiresIn : "1d"})
 
-        res.cookie("token", token)
+        res.cookie("token", token, {
+            httpOnly : true,
+            secure : process.env.NODE_ENV === "production",
+            sameSite : process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge : 24 * 60 * 60 * 1000
+        })
 
         res.status(201).json({
-            message : `User registed with username ${user.username}`,
+            message : `User registered with username ${user.username}`,
             user : {
                 id : user._id,
                 username : user.username,
@@ -44,7 +49,7 @@ const userRegister = async (req, res) => {
         })
     }catch(error){
         console.log(error)
-        res.status(500).json({message : `Something wen't wrong`})
+        res.status(500).json({message : `Something went wrong`})
     }
 }
 
@@ -67,12 +72,17 @@ const userLogin = async (req, res) =>{
         const isMatch = await bcrypt.compare(password, user.password)
 
         if(!isMatch){
-            res.status(401).json({message : "Invalid username or password"})
+            return res.status(401).json({message : "Invalid username or password"})
         }
 
         const token = jwt.sign({id : user._id, username : user.username}, process.env.JWT_SECRET_TOKEN, {expiresIn : "1d"})
 
-        res.cookie("token", token)
+        res.cookie("token", token, {
+            httpOnly : true,
+            secure : process.env.NODE_ENV === "production",
+            sameSite : process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge : 24 * 60 * 60 * 1000
+        })
 
         res.status(200).json({ 
             message : "User logged in successfully.",
@@ -84,7 +94,7 @@ const userLogin = async (req, res) =>{
          })
     }catch(error){
         console.log(error)
-        res.status(501).json({message : "Something wen't wrong, retry after some time"})
+        res.status(500).json({message : "Something went wrong, retry after some time"})
     }
 }
 
@@ -103,6 +113,12 @@ const getMe = async (req , res) => {
 
 const resetPassword = async(req, res) => {
     const { username, password, newPassword } = req.body
+
+    if(!username || !password || !newPassword){
+        return res.status(400).json({
+            message : "All fields are mandatory!"
+        })
+    }
 
     const user = await userModel.findOne({ username })
 
