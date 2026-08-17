@@ -9,7 +9,7 @@ import type { ApiError } from '../types/api'
  * frontend behind the same reverse-proxy host as the backend, routing
  * /auth and /secure through to it, for the same reason.
  */
-const BASE = ''
+const BASE =  import.meta.env.VITE_BACKEND_ORIGIN ?? ''
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
